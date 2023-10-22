@@ -18,4 +18,5 @@ target_link_libraries(parser
 	PRIVATE
 		token
 		lexer
+		ast
 )
