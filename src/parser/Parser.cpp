@@ -1,4 +1,14 @@
 #include "Parser.h"
+#include "BooleanLiteral.h"
+#include "IntegerLiteral.h"
+#include "FloatLiteral.h"
+#include "StringLiteral.h"
+#include "ArrayLiteral.h"
+#include "MapLiteral.h"
+#include "PrefixExpression.h"
+#include "InfixExpression.h"
+#include "AssignExpression.h"
+
 
 namespace hui {
 
@@ -60,6 +70,11 @@ static PRECEDENCE get_oper_precedence(TOKEN_TYPE t1)
 	return PRECEDENCE::LOWEST;
 }
 
+static bool operator<(PRECEDENCE p1, PRECEDENCE p2)
+{
+	return p2 > p1;
+}
+
 static bool compare_oper_precedence(TOKEN_TYPE t1, TOKEN_TYPE t2)
 {
 	return get_oper_precedence(t1) < get_oper_precedence(t2);
@@ -104,8 +119,112 @@ const std::vector<std::string>& Parser::errors() const
 
 void Parser::init()
 {
-	// todo
+	// prefix expression
+	// identifier
+	reg_prefix_func(TOKEN_TYPE::IDENT, [this] { return parse_identifier(); });
+	reg_prefix_func(TOKEN_TYPE::TRUE, [this] { return parse_bool_literal(); });
+	reg_prefix_func(TOKEN_TYPE::FALSE, [this] { return parse_bool_literal(); });
+	reg_prefix_func(TOKEN_TYPE::INT, [this] { return parse_integer_literal(); });
+	reg_prefix_func(TOKEN_TYPE::FLOAT, [this] { return parse_float_literal(); });
+	reg_prefix_func(TOKEN_TYPE::STRING, [this] { return parse_string_literal(); });
+	reg_prefix_func(TOKEN_TYPE::LBRACKET, [this] { return parse_array_literal(); });
+	reg_prefix_func(TOKEN_TYPE::LBRACE, [this] { return parse_map_literal(); });
 
+	// !, ~
+	reg_prefix_func(TOKEN_TYPE::NOT, [this] { return parse_prefix_expression(); });
+	reg_prefix_func(TOKEN_TYPE::NEGATION, [this] { return parse_prefix_expression(); });
+
+	// (
+	reg_prefix_func(TOKEN_TYPE::LPAREN, [this] { return parse_grouped_expression(); });
+
+
+	// infix expression
+	// (), [], .  函数调用运算符，下标运算符，成员运算符
+	reg_infix_func(TOKEN_TYPE::LPAREN,
+		[this](std::unique_ptr<Expression> expr) { return parse_call_expression(std::move(expr)); });
+	reg_infix_func(TOKEN_TYPE::LBRACKET,
+		[this](std::unique_ptr<Expression> expr) { return parse_index_expression(std::move(expr)); });
+	reg_infix_func(TOKEN_TYPE::NOT,
+		[this](std::unique_ptr<Expression> expr) { return parse_not_expression(std::move(expr)); });
+
+
+	// *, /
+	reg_infix_func(TOKEN_TYPE::MUL,
+		[this](std::unique_ptr<Expression> expr) { return parse_infix_expression(std::move(expr)); });
+	reg_infix_func(TOKEN_TYPE::DIV,
+		[this](std::unique_ptr<Expression> expr) { return parse_infix_expression(std::move(expr)); });
+
+	// +, -
+	reg_infix_func(TOKEN_TYPE::ADD,
+		[this](std::unique_ptr<Expression> expr) { return parse_infix_expression(std::move(expr)); });
+	reg_infix_func(TOKEN_TYPE::SUB,
+		[this](std::unique_ptr<Expression> expr) { return parse_infix_expression(std::move(expr)); });
+
+	// <<, >>
+	reg_infix_func(TOKEN_TYPE::LEFT_SHIFT,
+		[this](std::unique_ptr<Expression> expr) { return parse_infix_expression(std::move(expr)); });
+	reg_infix_func(TOKEN_TYPE::RIGHT_SHIFT,
+		[this](std::unique_ptr<Expression> expr) { return parse_infix_expression(std::move(expr)); });
+
+	// <, <=, >, >=
+	reg_infix_func(TOKEN_TYPE::LT,
+		[this](std::unique_ptr<Expression> expr) { return parse_infix_expression(std::move(expr)); });
+	reg_infix_func(TOKEN_TYPE::LT_EQ,
+		[this](std::unique_ptr<Expression> expr) { return parse_infix_expression(std::move(expr)); });
+	reg_infix_func(TOKEN_TYPE::GT,
+		[this](std::unique_ptr<Expression> expr) { return parse_infix_expression(std::move(expr)); });
+	reg_infix_func(TOKEN_TYPE::GT_EQ,
+		[this](std::unique_ptr<Expression> expr) { return parse_infix_expression(std::move(expr)); });
+
+	// ==, !=
+	reg_infix_func(TOKEN_TYPE::EQ,
+		[this](std::unique_ptr<Expression> expr) { return parse_infix_expression(std::move(expr)); });
+	reg_infix_func(TOKEN_TYPE::NOT_EQ,
+		[this](std::unique_ptr<Expression> expr) { return parse_infix_expression(std::move(expr)); });
+
+	// &
+	reg_infix_func(TOKEN_TYPE::BIT_AND,
+		[this](std::unique_ptr<Expression> expr) { return parse_infix_expression(std::move(expr)); });
+
+	// ^
+	reg_infix_func(TOKEN_TYPE::XOR,
+		[this](std::unique_ptr<Expression> expr) { return parse_infix_expression(std::move(expr)); });
+
+	// |
+	reg_infix_func(TOKEN_TYPE::BIT_OR,
+		[this](std::unique_ptr<Expression> expr) { return parse_infix_expression(std::move(expr)); });
+
+	// &&
+	reg_infix_func(TOKEN_TYPE::AND,
+		[this](std::unique_ptr<Expression> expr) { return parse_infix_expression(std::move(expr)); });
+
+	// ||
+	reg_infix_func(TOKEN_TYPE::OR,
+		[this](std::unique_ptr<Expression> expr) { return parse_infix_expression(std::move(expr)); });
+
+	// =, +=, -=, *=, /=, %=, &=, ^=, |=, <<=, >>=
+	reg_infix_func(TOKEN_TYPE::ASSIGN,
+		[this](std::unique_ptr<Expression> expr) { return parse_infix_expression(std::move(expr)); });
+	reg_infix_func(TOKEN_TYPE::ADD_ASSIGN,
+		[this](std::unique_ptr<Expression> expr) { return parse_infix_expression(std::move(expr)); });
+	reg_infix_func(TOKEN_TYPE::SUB_ASSING,
+		[this](std::unique_ptr<Expression> expr) { return parse_infix_expression(std::move(expr)); });
+	reg_infix_func(TOKEN_TYPE::MUL_ASSIGN,
+		[this](std::unique_ptr<Expression> expr) { return parse_infix_expression(std::move(expr)); });
+	reg_infix_func(TOKEN_TYPE::DIV_ASSIGN,
+		[this](std::unique_ptr<Expression> expr) { return parse_infix_expression(std::move(expr)); });
+	reg_infix_func(TOKEN_TYPE::REM_ASSIGN,
+		[this](std::unique_ptr<Expression> expr) { return parse_infix_expression(std::move(expr)); });
+	reg_infix_func(TOKEN_TYPE::BIT_AND_ASSIGN,
+		[this](std::unique_ptr<Expression> expr) { return parse_infix_expression(std::move(expr)); });
+	reg_infix_func(TOKEN_TYPE::XOR_ASSIGN,
+		[this](std::unique_ptr<Expression> expr) { return parse_infix_expression(std::move(expr)); });
+	reg_infix_func(TOKEN_TYPE::BIT_OR_ASSIGN,
+		[this](std::unique_ptr<Expression> expr) { return parse_infix_expression(std::move(expr)); });
+	reg_infix_func(TOKEN_TYPE::LS_ASSIGN,
+		[this](std::unique_ptr<Expression> expr) { return parse_infix_expression(std::move(expr)); });
+	reg_infix_func(TOKEN_TYPE::RS_ASSIGN,
+		[this](std::unique_ptr<Expression> expr) { return parse_infix_expression(std::move(expr)); });
 
 
 	next_token();
@@ -386,6 +505,165 @@ std::unique_ptr<BlockStatement> Parser::parse_block_statement()
 	}
 
 	return block;
+}
+
+void Parser::reg_prefix_func(TOKEN_TYPE type, prefix_func func)
+{
+	m_prefix_funcs[type] = func;
+}
+
+void Parser::reg_infix_func(TOKEN_TYPE type, infix_func func)
+{
+	m_infix_funcs[type] = func;
+}
+
+std::unique_ptr<Expression> Parser::parse_expression(PRECEDENCE prec)
+{
+	auto it = m_prefix_funcs.find(m_curr_token->get_type());
+	if (it == m_prefix_funcs.end())
+	{
+		no_prefix_parse_func_error(m_curr_token->get_type());
+		return nullptr;
+	}
+
+	auto left_expr = it->second();
+
+	while (!next_token_is(TOKEN_TYPE::SEMICOLON) && prec < next_precedence())
+	{
+		auto iit = m_infix_funcs.find(m_curr_token->get_type());
+		if (iit == m_infix_funcs.end())
+		{
+			return left_expr;
+		}
+
+		next_token();
+		left_expr = iit->second(std::move(left_expr));
+	}
+
+	return left_expr;
+}
+
+std::unique_ptr<Expression> Parser::parse_identifier()
+{
+	return std::make_unique<Identifier>(*m_curr_token, m_curr_token->get_literal());
+}
+
+std::unique_ptr<Expression> Parser::parse_bool_literal()
+{
+	return std::make_unique<BooleanLiteral>(*m_curr_token, curr_token_is(TOKEN_TYPE::TRUE));
+}
+
+std::unique_ptr<Expression> Parser::parse_integer_literal()
+{
+	return std::make_unique<IntegerLiteral>(*m_curr_token, std::stoll(m_curr_token->get_literal()));
+}
+
+std::unique_ptr<Expression> Parser::parse_float_literal()
+{
+	return std::make_unique<FloatLiteral>(*m_curr_token, std::stod(m_curr_token->get_literal()));
+}
+
+std::unique_ptr<Expression> Parser::parse_string_literal()
+{
+	return std::make_unique<StringLiteral>(*m_curr_token, m_curr_token->get_literal());
+}
+
+std::unique_ptr<Expression> Parser::parse_array_literal()
+{
+	return std::make_unique<ArrayLiteral>(*m_curr_token, parse_expression_list(TOKEN_TYPE::RBRACKET));
+}
+
+std::unique_ptr<Expression> Parser::parse_map_literal()
+{
+	auto token = std::make_unique<Token>(*m_curr_token);
+	auto map = std::make_unique<std::map<std::shared_ptr<Expression>, std::shared_ptr<Expression>>>();
+
+	while (!next_token_is(TOKEN_TYPE::RBRACE))
+	{
+		next_token();
+
+		auto key = parse_expression();
+		if (!expect_next(TOKEN_TYPE::COLON))
+		{
+			return nullptr;
+		}
+
+		next_token();
+
+		auto value = parse_expression();
+		(*map)[std::move(key)] = std::move(value);
+
+		if (!next_token_is(TOKEN_TYPE::RBRACE) &&
+			!next_token_is(TOKEN_TYPE::COMMA))
+		{
+			return nullptr;
+		}
+	}
+
+	return std::make_unique<MapLiteral>(std::move(token), std::move(map));
+}
+
+std::unique_ptr<Expression> Parser::parse_prefix_expression()
+{
+	return std::make_unique<PrefixExpression>(*m_curr_token, 
+											  m_curr_token->get_literal(),
+											  parse_expression(PRECEDENCE::NOT));
+}
+
+std::unique_ptr<Expression> Parser::parse_grouped_expression()
+{
+	next_token();
+
+	auto expr = parse_expression();
+	if (!expect_next(TOKEN_TYPE::RPAREN))
+	{
+		return nullptr;
+	}
+
+	return expr;
+}
+
+std::unique_ptr<Expression> Parser::parse_infix_expression(std::unique_ptr<Expression> left)
+{
+	auto token = std::make_unique<Token>(*m_curr_token);
+
+	auto prec = curr_precedence();
+	next_token();
+	auto right = parse_expression(prec);
+
+	return std::make_unique<InfixExpression>(std::move(token), 
+											 std::move(left),
+											 m_curr_token->get_literal(), 
+											 std::move(right));
+}
+
+std::unique_ptr<Expression> Parser::parse_assign_expression(std::unique_ptr<Expression> left)
+{
+	auto token = std::make_unique<Token>(*m_curr_token);
+
+	auto cast_node = dynamic_cast<Identifier*>(left.get());
+	if (cast_node == nullptr)
+	{
+		return nullptr;
+	}
+
+	left.release();
+	auto name = std::unique_ptr<Identifier>(cast_node);
+
+	next_token();
+	auto expr = parse_expression();
+
+	return std::make_unique<AssignExpression>(std::move(token), std::move(name), std::move(expr));
+}
+
+std::unique_ptr<Expression> Parser::parse_not_expression(std::unique_ptr<Expression> left)
+{
+	// todo
+	// x.to_string();
+
+
+
+	return nullptr;
 }
 
 

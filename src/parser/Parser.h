@@ -141,11 +141,16 @@ private:
 	std::unique_ptr<Expression> parse_function_literal();
 
 	std::unique_ptr<Expression> parse_prefix_expression();
-	std::unique_ptr<Expression> parse_infix_expression(std::unique_ptr<Expression> expr);
+	std::unique_ptr<Expression> parse_grouped_expression();
+	std::unique_ptr<Expression> parse_infix_expression(std::unique_ptr<Expression> left);
 	std::unique_ptr<Expression> parse_assign_expression(std::unique_ptr<Expression> left);
-
+	std::unique_ptr<Expression> parse_not_expression(std::unique_ptr<Expression> left);
 
 	std::unique_ptr<std::vector<std::unique_ptr<Identifier>>> parse_function_parameters();
+	std::unique_ptr<Expression> parse_call_expression(std::unique_ptr<Expression> expr);
+	std::unique_ptr<std::vector<std::unique_ptr<Expression>>> parse_call_arguments();
+	std::unique_ptr<std::vector<std::unique_ptr<Expression>>> parse_expression_list(TOKEN_TYPE end);
+	std::unique_ptr<Expression> parse_index_expression(std::unique_ptr<Expression> left);
 
 };
 
