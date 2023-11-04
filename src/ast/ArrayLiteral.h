@@ -13,12 +13,11 @@ namespace hui {
 class ArrayLiteral : public Expression
 {
 private:
-	std::unique_ptr<Token> m_token;
 	std::unique_ptr<std::vector<std::unique_ptr<Expression>>> m_elements;
 
 public:
 	ArrayLiteral(const Token& token, std::unique_ptr<std::vector<std::unique_ptr<Expression>>> value)
-		: m_token(std::make_unique<Token>(token)),
+		: Expression(std::make_unique<Token>(token)),
 		  m_elements(std::move(value)) { }
 
 public:

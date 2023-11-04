@@ -12,15 +12,12 @@ namespace hui {
 class BlockStatement : public Statement
 {
 public:
-	std::unique_ptr<Token> m_token;
 	std::vector<std::unique_ptr<Statement>> m_statements;
 
 public:
-	BlockStatement(const Token& token)
-		: m_token(std::make_unique<Token>(token)) { }
+	using Statement::Statement;
 
 public:
-	std::string token_literal() override { return m_token->get_literal(); }
 	std::string to_string() override
 	{
 		std::string str;

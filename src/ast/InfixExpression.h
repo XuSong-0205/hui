@@ -12,24 +12,17 @@ namespace hui {
 
 class InfixExpression : public Expression
 {
-private:
-	std::unique_ptr<Token> m_token;
+public:
 	std::unique_ptr<Expression> m_left;
 	std::string m_oper;
 	std::unique_ptr<Expression> m_right;
 
 public:
-	InfixExpression(std::unique_ptr<Token> token,
-					std::unique_ptr<Expression> left,
-					const std::string& oper,
-					std::unique_ptr<Expression> right)
-		: m_token(std::move(token)),
-		  m_left(std::move(left)),
-		  m_oper(oper),
-		  m_right(std::move(right)) { }
+ 	explicit InfixExpression(const Token& token) 
+		: Expression(std::make_unique<Token>(token))
+		, m_oper(token.get_literal()) { }
 
 public:
-	std::string token_literal() override { return m_token->get_literal(); }
 	std::string to_string() override
 	{
 		return "(" + m_left->to_string() + " " + m_oper + " " + m_right->to_string() + ")";

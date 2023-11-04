@@ -13,21 +13,14 @@ namespace hui {
 
 class AssignExpression : public Expression
 {
-private:
-	std::unique_ptr<Token> m_token;
+public:
 	std::unique_ptr<Identifier> m_name;
 	std::unique_ptr<Expression> m_value;
 
 public:
-	AssignExpression(std::unique_ptr<Token> token,
-					 std::unique_ptr<Identifier> name,
-					 std::unique_ptr<Expression> value)
-		: m_token(std::move(token)),
-		  m_name(std::move(name)),
-		  m_value(std::move(value)) { }
+	using Expression::Expression;
 
 public:
-	std::string token_literal() override { return m_token->get_literal(); }
 	std::string to_string() override
 	{
 		return m_name->to_string() + " = " + m_value->to_string();

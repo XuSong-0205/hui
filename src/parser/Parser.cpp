@@ -354,9 +354,9 @@ std::unique_ptr<VarStatement> Parser::parse_var_statement()
 
 std::unique_ptr<ConstStatement> Parser::parse_const_statement()
 {
+	auto const_stmt = std::make_unique<ConstStatement>(*m_curr_token);
 	auto var_stmt = parse_var_statement();
 
-	auto const_stmt = std::make_unique<ConstStatement>(*var_stmt->m_token);
 	const_stmt->m_name = std::move(var_stmt->m_name);
 	const_stmt->m_value = std::move(var_stmt->m_value);
 
@@ -605,9 +605,12 @@ std::unique_ptr<Expression> Parser::parse_map_literal()
 
 std::unique_ptr<Expression> Parser::parse_prefix_expression()
 {
-	return std::make_unique<PrefixExpression>(*m_curr_token, 
-											  m_curr_token->get_literal(),
-											  parse_expression(PRECEDENCE::NOT));
+	auto expression = std::make_unique<PrefixExpression>(*m_curr_token);
+	
+	next_token();
+	expression->m_right = parse_expression(PRECEDENCE::NOT);
+
+	return expression;
 }
 
 std::unique_ptr<Expression> Parser::parse_grouped_expression()
@@ -625,35 +628,35 @@ std::unique_ptr<Expression> Parser::parse_grouped_expression()
 
 std::unique_ptr<Expression> Parser::parse_infix_expression(std::unique_ptr<Expression> left)
 {
-	auto token = std::make_unique<Token>(*m_curr_token);
+	auto expression = std::make_unique<InfixExpression>(*m_curr_token);
 
+	expression->m_left = std::move(left);
 	auto prec = curr_precedence();
-	next_token();
-	auto right = parse_expression(prec);
 
-	return std::make_unique<InfixExpression>(std::move(token), 
-											 std::move(left),
-											 m_curr_token->get_literal(), 
-											 std::move(right));
+	next_token();
+	expression->m_right = parse_expression(prec);
+
+	return expression;
 }
 
 std::unique_ptr<Expression> Parser::parse_assign_expression(std::unique_ptr<Expression> left)
 {
-	auto token = std::make_unique<Token>(*m_curr_token);
-
-	auto cast_node = dynamic_cast<Identifier*>(left.get());
-	if (cast_node == nullptr)
+	if (!curr_token_is(TOKEN_TYPE::ASSIGN))
 	{
 		return nullptr;
 	}
 
-	left.release();
-	auto name = std::unique_ptr<Identifier>(cast_node);
-
+	auto expression = std::make_unique<AssignExpression>(*m_curr_token);
+	if (auto cast_node = dynamic_cast<Identifier*>(left.get()))
+	{
+		left.release();
+		expression->m_name = std::unique_ptr<Identifier>(cast_node);
+	}
 	next_token();
-	auto expr = parse_expression();
 
-	return std::make_unique<AssignExpression>(std::move(token), std::move(name), std::move(expr));
+	expression->m_value = parse_expression();
+
+	return expression;
 }
 
 std::unique_ptr<Expression> Parser::parse_not_expression(std::unique_ptr<Expression> left)

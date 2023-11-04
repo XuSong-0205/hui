@@ -13,16 +13,14 @@ namespace hui {
 class FloatLiteral : public Expression
 {
 private:
-	std::unique_ptr<Token> m_token;
 	double m_value;
 
 public:
 	FloatLiteral(const Token& token, double value)
-		: m_token(std::make_unique<Token>(token)),
+		: Expression(std::make_unique<Token>(token)),
 		  m_value(value) { }
 
 public:
-	std::string token_literal() override { return m_token->get_literal(); }
 	std::string to_string() override { return m_token->get_literal(); }
 };
 

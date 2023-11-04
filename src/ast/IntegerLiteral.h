@@ -13,16 +13,14 @@ namespace hui {
 class IntegerLiteral : public Expression
 {
 private:
-	std::unique_ptr<Token> m_token;
 	std::int64_t m_value;
 
 public:
 	IntegerLiteral(const Token& token, std::int64_t value)
-		: m_token(std::make_unique<Token>(token)),
+		: Expression(std::make_unique<Token>(token)),
 		  m_value(value) { }
 
 public:
-	std::string token_literal() override { return m_token->get_literal(); }
 	std::string to_string() override { return m_token->get_literal(); }
 };
 

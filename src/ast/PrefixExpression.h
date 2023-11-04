@@ -12,21 +12,16 @@ namespace hui {
 
 class PrefixExpression : public Expression
 {
-private:
-	std::unique_ptr<Token> m_token;
+public:
 	std::string m_oper;
 	std::unique_ptr<Expression> m_right;
 
 public:
-	PrefixExpression(const Token& token, 
-					 const std::string& oper,
-					 std::unique_ptr<Expression> right)
-		: m_token(std::make_unique<Token>(token)),
-		  m_oper(oper),
-		  m_right(std::move(right)) { }
+	explicit PrefixExpression(const Token& token)
+		: Expression(std::make_unique<Token>(token))
+		, m_oper(token.get_literal()) { } 
 
 public:
-	std::string token_literal() override { return m_token->get_literal(); }
 	std::string to_string() override 
 	{
 		return "(" + m_oper + m_right->to_string() + ")";

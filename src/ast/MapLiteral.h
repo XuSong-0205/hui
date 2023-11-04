@@ -13,22 +13,20 @@ namespace hui {
 class MapLiteral : public Expression
 {
 private:
-	std::unique_ptr<Token> m_token;
 	std::unique_ptr<std::map<std::shared_ptr<Expression>, std::shared_ptr<Expression>>> m_map;
 
 public:
 	MapLiteral(const Token& token, 
 			   std::unique_ptr<std::map<std::shared_ptr<Expression>, std::shared_ptr<Expression>>> value)
-		: m_token(std::make_unique<Token>(token)),
+		: Expression(std::make_unique<Token>(token)),
 		  m_map(std::move(value)) { }
 
 	MapLiteral(std::unique_ptr<Token> token, 
 			   std::unique_ptr<std::map<std::shared_ptr<Expression>, std::shared_ptr<Expression>>> value)
-		: m_token(std::move(token)),
+		: Expression(std::move(token)),
 		  m_map(std::move(value)) { }
 
 public:
-	std::string token_literal() override { return m_token->get_literal(); }
 	std::string to_string() override { 
 		std::string str;
 		str += "{";
