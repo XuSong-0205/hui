@@ -1,4 +1,4 @@
-add_executable(hui main.cpp "object/Environment.h" "object/Object.h" "object/Constant.h")
+add_executable(hui main.cpp)
 
 
 add_subdirectory(token)
