@@ -115,11 +115,11 @@ private:
 	std::unique_ptr<Statement> parse_statement();
 	std::unique_ptr<VarStatement> parse_var_statement();
 	std::unique_ptr<ConstStatement> parse_const_statement();
-	//std::unique_ptr<IfStatement> parse_if_statement();
+	std::unique_ptr<IfStatement> parse_if_statement();
 	std::unique_ptr<ForStatement> parse_for_statement();
 	//std::unique_ptr<Statement> parse_continue_statement();
 	//std::unique_ptr<Statement> parse_break_statement();
-	//std::unique_ptr<ReturnStatement> parse_return_statement();
+	std::unique_ptr<ReturnStatement> parse_return_statement();
 	std::unique_ptr<FunctionStatement> parse_function_statement();
 	std::unique_ptr<ExpressionStatement> parse_expression_statement();
 	std::unique_ptr<BlockStatement> parse_block_statement();
@@ -138,7 +138,6 @@ private:
 	std::unique_ptr<Expression> parse_string_literal();
 	std::unique_ptr<Expression> parse_array_literal();
 	std::unique_ptr<Expression> parse_map_literal();
-	std::unique_ptr<Expression> parse_function_literal();
 
 	std::unique_ptr<Expression> parse_prefix_expression();
 	std::unique_ptr<Expression> parse_grouped_expression();

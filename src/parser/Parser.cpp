@@ -8,6 +8,8 @@
 #include "PrefixExpression.h"
 #include "InfixExpression.h"
 #include "AssignExpression.h"
+#include "CallExpression.h"
+#include "IndexExpression.h"
 
 
 namespace hui {
@@ -300,7 +302,7 @@ std::unique_ptr<Statement> Parser::parse_statement()
 		return parse_const_statement();
 
 	case TOKEN_TYPE::IF:
-		//return parse_if_statement();
+		return parse_if_statement();
 
 	case TOKEN_TYPE::FOR:
 		return parse_for_statement();
@@ -363,10 +365,67 @@ std::unique_ptr<ConstStatement> Parser::parse_const_statement()
 	return const_stmt;
 }
 
-//std::unique_ptr<IfStatement> Parser::parse_if_statement()
-//{
-//	return std::unique_ptr<IfStatement>();
-//}
+std::unique_ptr<IfStatement> Parser::parse_if_statement()
+{
+	auto stmt = std::make_unique<IfStatement>(*m_curr_token);
+
+	if (!expect_next(TOKEN_TYPE::LPAREN)) 
+	{
+		return nullptr;
+	}
+
+	next_token();
+	stmt->m_conditions.push_back(parse_expression());
+
+	if (!expect_next(TOKEN_TYPE::RPAREN)) 
+	{
+		return nullptr;
+	}
+
+	if (!expect_next(TOKEN_TYPE::LBRACE))
+	{
+		return nullptr;
+	}
+
+	stmt->m_consequences.push_back(parse_block_statement());
+
+	while (next_token_is(TOKEN_TYPE::ELSE))
+	{
+		next_token();
+		if (next_token_is(TOKEN_TYPE::IF))
+		{
+			next_token();
+			if (!expect_next(TOKEN_TYPE::LBRACE))
+			{
+				return nullptr;
+			}
+
+			stmt->m_conditions.push_back(parse_expression());
+
+			if (!expect_next(TOKEN_TYPE::RPAREN))
+			{
+				return nullptr;
+			}
+
+			if (!expect_next(TOKEN_TYPE::LBRACE))
+			{
+				return nullptr;
+			}
+
+			stmt->m_consequences.push_back(parse_block_statement());
+		}
+		else if (curr_token_is(TOKEN_TYPE::LBRACE))
+		{
+			stmt->m_alternative = parse_block_statement();
+		}
+		else
+		{
+			return nullptr;
+		}
+	}
+
+	return stmt;
+}
 
 std::unique_ptr<ForStatement> Parser::parse_for_statement()
 {
@@ -427,10 +486,26 @@ std::unique_ptr<ForStatement> Parser::parse_for_statement()
 //	return std::unique_ptr<Statement>();
 //}
 
-//std::unique_ptr<ReturnStatement> Parser::parse_return_statement()
-//{
-//	return std::unique_ptr<ReturnStatement>();
-//}
+std::unique_ptr<ReturnStatement> Parser::parse_return_statement()
+{
+	auto stmt = std::make_unique<ReturnStatement>(*m_curr_token);
+
+	next_token();
+
+	auto expr = parse_expression();
+	if (!expr)
+	{
+		return nullptr;
+	}
+
+	stmt->m_return_value = std::move(expr);
+	if (!expect_next(TOKEN_TYPE::SEMICOLON))
+	{
+		return nullptr;
+	}
+
+	return stmt;
+}
 
 std::unique_ptr<FunctionStatement> Parser::parse_function_statement()
 {
@@ -477,10 +552,6 @@ std::unique_ptr<ExpressionStatement> Parser::parse_expression_statement()
 		return nullptr;
 	}
 
-	//if (next_token_is(TOKEN_TYPE::SEMICOLON))
-	//{
-	//	next_token();
-	//}
 	if (!expect_next(TOKEN_TYPE::LBRACE))
 	{
 		return nullptr;
@@ -698,6 +769,63 @@ std::unique_ptr<std::vector<std::unique_ptr<Identifier>>> Parser::parse_function
 	}
 
 	return identifiers;
+}
+
+std::unique_ptr<Expression> Parser::parse_call_expression(std::unique_ptr<Expression> expr)
+{
+	auto expression = std::make_unique<CallExpression>(*m_curr_token);
+	expression->m_function = std::move(expr);
+	expression->m_arguments = parse_expression_list(TOKEN_TYPE::RPAREN);
+	return expression;
+}
+
+std::unique_ptr<std::vector<std::unique_ptr<Expression>>> Parser::parse_call_arguments()
+{
+	return parse_expression_list(TOKEN_TYPE::RPAREN);
+}
+
+std::unique_ptr<std::vector<std::unique_ptr<Expression>>> Parser::parse_expression_list(TOKEN_TYPE end)
+{
+	auto args = std::make_unique<std::vector<std::unique_ptr<Expression>>>();
+
+	if (next_token_is(end))
+	{
+		next_token();
+		return args;
+	}
+
+	next_token();
+	args->push_back(parse_expression());
+
+	while (next_token_is(TOKEN_TYPE::COMMA))
+	{
+		next_token();
+		next_token();
+		args->push_back(parse_expression());
+	}
+
+	if (!expect_next(end))
+	{
+		return nullptr;
+	}
+
+	return args;
+}
+
+std::unique_ptr<Expression> Parser::parse_index_expression(std::unique_ptr<Expression> left)
+{
+	auto expression = std::make_unique<IndexExpression>(*m_curr_token);
+
+	expression->m_left = std::move(left);
+	next_token();
+	expression->m_index = parse_expression();
+
+	if (!expect_next(TOKEN_TYPE::RBRACKET))
+	{
+		return nullptr;
+	}
+
+	return expression;
 }
 
 }

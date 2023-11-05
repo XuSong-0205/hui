@@ -1,4 +1,4 @@
-add_executable(hui main.cpp "ast/Node.h" "ast/Expression.h" "ast/Statement.h" "ast/Program.h" "ast/VarStatement.h" "ast/ConstStatement.h" "ast/ForStatement.h" "ast/IfStatement.h" "ast/FunctionStatement.h" "ast/ReturnStatement.h" "ast/ExpressionStatement.h" "ast/Identifier.h" "ast/BlockStatement.h" "ast/BooleanLiteral.h" "ast/IntegerLiteral.h" "ast/FloatLiteral.h" "ast/StringLiteral.h" "ast/ArrayLiteral.h" "ast/MapLiteral.h" "ast/PrefixExpression.h" "ast/InfixExpression.h" "ast/AssignExpression.h")
+add_executable(hui main.cpp)
 
 
 add_subdirectory(token)
