@@ -20,7 +20,7 @@ public:
 		  m_value(value) { }
 
 public:
-	std::string to_string() override { return m_token->get_literal(); }
+	std::string to_string() override { return "\"" + m_token->get_literal() + "\""; }
 };
 
 }	// namespace hui

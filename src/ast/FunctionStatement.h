@@ -27,14 +27,19 @@ public:
 	{
 		std::string str;
 
-		str += token_literal();
+		str += token_literal() + " ";
 		str += m_name->to_string();
 		str += "(";
-		for (auto&& param : *m_parameters)
+		for (int i = 0; i < 1; ++i)
 		{
-			str += param->to_string();
+			str += (*m_parameters)[i]->to_string();
 		}
-		str += ")";
+
+		for (size_t i = 1; i < m_parameters->size(); ++i)
+		{
+			str += ", " + (*m_parameters)[i]->to_string();
+		}
+		str += ") ";
 		str += m_body->to_string();
 
 		return str;

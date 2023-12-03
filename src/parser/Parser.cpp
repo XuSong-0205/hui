@@ -146,14 +146,16 @@ void Parser::init()
 		[this](std::unique_ptr<Expression> expr) { return parse_call_expression(std::move(expr)); });
 	reg_infix_func(TOKEN_TYPE::LBRACKET,
 		[this](std::unique_ptr<Expression> expr) { return parse_index_expression(std::move(expr)); });
-	reg_infix_func(TOKEN_TYPE::NOT,
-		[this](std::unique_ptr<Expression> expr) { return parse_not_expression(std::move(expr)); });
+	reg_infix_func(TOKEN_TYPE::DOT,
+		[this](std::unique_ptr<Expression> expr) { return parse_dot_expression(std::move(expr)); });
 
 
 	// *, /
 	reg_infix_func(TOKEN_TYPE::MUL,
 		[this](std::unique_ptr<Expression> expr) { return parse_infix_expression(std::move(expr)); });
 	reg_infix_func(TOKEN_TYPE::DIV,
+		[this](std::unique_ptr<Expression> expr) { return parse_infix_expression(std::move(expr)); });
+	reg_infix_func(TOKEN_TYPE::REM,
 		[this](std::unique_ptr<Expression> expr) { return parse_infix_expression(std::move(expr)); });
 
 	// +, -
@@ -730,7 +732,7 @@ std::unique_ptr<Expression> Parser::parse_assign_expression(std::unique_ptr<Expr
 	return expression;
 }
 
-std::unique_ptr<Expression> Parser::parse_not_expression(std::unique_ptr<Expression> left)
+std::unique_ptr<Expression> Parser::parse_dot_expression(std::unique_ptr<Expression> left)
 {
 	// todo
 	// x.to_string();

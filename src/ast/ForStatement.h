@@ -27,14 +27,14 @@ public:
 	{
 		std::string str;
 
-		str += "for";
+		str += "for ";
 		str += "(";
 
 		str += m_loop_var->to_string();
-		str += m_condition->to_string();
-		str += m_next_step->to_string();
+		str += " " + m_condition->to_string() + ";";
+		str += " " + m_next_step->to_string();
 
-		str += ")";
+		str += ") ";
 		str += m_body->to_string();
 
 		return str;

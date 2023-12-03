@@ -21,10 +21,13 @@ public:
 	std::string to_string() override
 	{
 		std::string str;
+
+		str += "{\n";
 		for (auto&& stmt : m_statements)
 		{
-			str += stmt->to_string();
+			str += stmt->to_string() + "\n";
 		}
+		str += "}";
 
 		return str;
 	}

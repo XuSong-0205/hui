@@ -143,7 +143,7 @@ private:
 	std::unique_ptr<Expression> parse_grouped_expression();
 	std::unique_ptr<Expression> parse_infix_expression(std::unique_ptr<Expression> left);
 	std::unique_ptr<Expression> parse_assign_expression(std::unique_ptr<Expression> left);
-	std::unique_ptr<Expression> parse_not_expression(std::unique_ptr<Expression> left);
+	std::unique_ptr<Expression> parse_dot_expression(std::unique_ptr<Expression> left);
 
 	std::unique_ptr<std::vector<std::unique_ptr<Identifier>>> parse_function_parameters();
 	std::unique_ptr<Expression> parse_call_expression(std::unique_ptr<Expression> expr);

@@ -19,7 +19,7 @@ public:
 	using Statement::Statement;
 
 public:
-	std::string to_string() override { return m_expression->to_string(); }
+	std::string to_string() override { return m_expression->to_string() + ";"; }
 };
 
 }	// namespace hui

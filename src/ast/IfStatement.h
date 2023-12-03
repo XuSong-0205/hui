@@ -28,18 +28,15 @@ public:
 
         str += "if (";
         str += m_conditions[0]->to_string();
-        str += ")";
-        str += m_consequences[0]->to_string();
+        str += ") ";
+        str += m_consequences[0]->to_string() + " ";
 
-        if (m_conditions.size() > 1)
+        for (size_t i = 1; i < m_conditions.size(); ++i)
         {
-            for (size_t i = 1; i < m_conditions.size(); ++i)
-            {
-                str += "else if (";
-                str += m_conditions[i]->to_string();
-                str += ")";
-                str += m_consequences[i]->to_string();
-            }
+            str += "else if (";
+            str += m_conditions[i]->to_string();
+            str += ") ";
+            str += m_consequences[i]->to_string() + " ";
         }
 
         if (m_alternative)
